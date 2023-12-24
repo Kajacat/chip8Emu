@@ -63,25 +63,6 @@ class CPU:
     def draw(self):
         pass
 
-    decode_values = {
-        "1": clear_screen,
-        "2": jump,
-        "3": set_register_VX,
-        "4": add_register_VX,
-        "5": set_register_I,
-        "6": draw,
-    }
-
-    def decode_switch(self, case):
-        return self.decode_values.get(case, "Invalid opcode")
-
-    def run(self, cycles_to_execute):
-        while executed_cycles < cycles_to_execute:
-            opcode = self.fetch()
-            function = self.decode(opcode)
-            self.execute(function)
-
-
 if __name__ == "__main__":
     cpu = CPU()
     cpu.run()
