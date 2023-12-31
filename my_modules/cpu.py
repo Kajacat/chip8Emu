@@ -7,7 +7,7 @@ OpcodeParts = namedtuple("OpcodeParts", ["F", "X", "Y", "N", "NN", "NNN"])
 
 
 class CPU:
-    def __init__(self):
+    def __init__(self, screen):
         self.pc = 512  # Program Counter (start value in decimal)
         self.memory = [0] * 4096  # Memory with 4096 (bytes) locations
         self.stack = []  # Stack, 12 bits addresses
@@ -15,10 +15,12 @@ class CPU:
             "I": 0,  # Index register
             "Delay": 0,  # Delay timer, start at 60 and count down to 0, 60Hz
             "Sound": 0,  # Sound timer, start at 60 and count down to 0, 60Hz
+            "V": [0] * 16,  # 16 8-bit registers
         }
 
         # Merge font with memory
         self.memory[80: 80 + len(font)] = font
+        self.screen = screen
 
     def fetch(self):
         opcode = (
@@ -42,28 +44,65 @@ class CPU:
                 opcode.N == 0x0):
             return partial(self.clear_screen, opcode)
 
+        if (opcode.F == 0x1):
+            return partial(self.jump, opcode)
+        
+        if (opcode.F == 0x6):
+            return partial(self.set_register_VX, opcode)
+
+        if (opcode.F == 0xD):
+            return partial(self.draw, opcode)
+
         raise NotImplementedError("Opcode not implemented")
+
+    def run(self):
+        opcode = self.fetch()
+        function = self.decode(opcode)
+        self.execute(function)
 
     def execute(self, function):
         pass
 
     def clear_screen(self, opcode):
+        self.screen.clear()
+
+    def jump(self, opcode):
+        self.pc = opcode.NNN
+
+    def set_register_VX(self, opcode):
         pass
 
-    def jump(self):
+    def add_register_VX(self, opcode):
         pass
 
-    def set_register_VX(self):
+    def set_register_I(self, opcode):
         pass
 
-    def add_register_VX(self):
-        pass
-
-    def set_register_I(self):
-        pass
-
-    def draw(self):
-        pass
+    def draw(self, opcode):
+        # Draw a sprite at position VX, VY with N bytes of sprite data starting at the address stored in I
+        sprite_data = self.memory[self.registers["I"]: self.registers["I"] + opcode.N]
+        x_start = self.registers["V"][opcode.X] & (self.screen.width - 1) 
+        y_start = self.registers["V"][opcode.Y] & (self.screen.height - 1)
+        self.registers["V"][0xF] = 0
+        
+        x = x_start
+        y = y_start
+        
+        for sprite_row in sprite_data:
+            for pixel_index in range(8):
+                x = x_start + pixel_index
+                
+                if x >= self.screen.width:
+                    x = x_start
+                    break         
+                
+                pixel = sprite_row >> pixel_index & 0x1
+                current_pixel = self.screen.get_pixel(x, y)
+                new_pixel = current_pixel ^ pixel
+                self.registers["V"][0xF] |= current_pixel & pixel & 0x1
+                self.screen.set_pixel(x, y, new_pixel)
+            
+            y += 1 
 
 
 if __name__ == "__main__":
