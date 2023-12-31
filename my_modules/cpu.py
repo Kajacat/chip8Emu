@@ -18,7 +18,7 @@ class CPU:
         }
 
         # Merge font with memory
-        self.memory[80 : 80 + len(font)] = font
+        self.memory[80: 80 + len(font)] = font
 
     def fetch(self):
         opcode = (
@@ -36,13 +36,15 @@ class CPU:
         return OpcodeParts(F, X, Y, N, NN, NNN)
 
     def decode(self, opcode):
-        if opcode.F == 0x0 and opcode.X == 0x0 and opcode.Y == 0xE and opcode.N == 0x0:
+        if (opcode.F == 0x0 and
+                opcode.X == 0x0 and
+                opcode.Y == 0xE and
+                opcode.N == 0x0):
             return partial(self.clear_screen, opcode)
 
         raise NotImplementedError("Opcode not implemented")
 
     def execute(self, function):
-        # This is a placeholder. You'll need to implement the actual opcode functions.
         pass
 
     def clear_screen(self, opcode):
@@ -62,6 +64,7 @@ class CPU:
 
     def draw(self):
         pass
+
 
 if __name__ == "__main__":
     cpu = CPU()

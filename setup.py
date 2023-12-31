@@ -14,7 +14,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.12',
     ],
-    keywords='gameboy emulator',
+    keywords='chip8 emulator',
     install_requires=[
     ],
     python_requires='>=3.12',
