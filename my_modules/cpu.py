@@ -7,7 +7,7 @@ OpcodeParts = namedtuple("OpcodeParts", ["F", "X", "Y", "N", "NN", "NNN"])
 
 
 class CPU:
-    def __init__(self, screen):
+    def __init__(self, screen, rom):
         self.pc = 512  # Program Counter (start value in decimal)
         self.memory = [0] * 4096  # Memory with 4096 (bytes) locations
         self.stack = []  # Stack, 12 bits addresses
@@ -20,6 +20,7 @@ class CPU:
 
         # Merge font with memory
         self.memory[80: 80 + len(font)] = font
+        self.memory[self.pc: self.pc + len(rom)] = rom
         self.screen = screen
 
     def fetch(self):
@@ -46,9 +47,15 @@ class CPU:
 
         if (opcode.F == 0x1):
             return partial(self.jump, opcode)
-        
+
         if (opcode.F == 0x6):
             return partial(self.set_register_VX, opcode)
+
+        if (opcode.F == 0x7):
+            return partial(self.add_register_VX, opcode)
+
+        if (opcode.F == 0xA):
+            return partial(self.set_register_I, opcode)
 
         if (opcode.F == 0xD):
             return partial(self.draw, opcode)
@@ -61,7 +68,7 @@ class CPU:
         self.execute(function)
 
     def execute(self, function):
-        pass
+        function()
 
     def clear_screen(self, opcode):
         self.screen.clear()
@@ -70,41 +77,39 @@ class CPU:
         self.pc = opcode.NNN
 
     def set_register_VX(self, opcode):
-        pass
+        self.registers["V"][opcode.X] = opcode.NN
 
     def add_register_VX(self, opcode):
-        pass
+        self.registers["V"][opcode.X] += opcode.NN
 
     def set_register_I(self, opcode):
-        pass
+        self.registers["I"] = opcode.NNN
 
     def draw(self, opcode):
-        # Draw a sprite at position VX, VY with N bytes of sprite data starting at the address stored in I
-        sprite_data = self.memory[self.registers["I"]: self.registers["I"] + opcode.N]
-        x_start = self.registers["V"][opcode.X] & (self.screen.width - 1) 
+        # Draw a sprite at position VX, VY with N bytes of sprite data
+        # starting at the address stored in I
+
+        sprite_data = self.memory[self.registers["I"]:
+                                  self.registers["I"] + opcode.N]
+        x_start = self.registers["V"][opcode.X] & (self.screen.width - 1)
         y_start = self.registers["V"][opcode.Y] & (self.screen.height - 1)
         self.registers["V"][0xF] = 0
-        
+
         x = x_start
         y = y_start
-        
+
         for sprite_row in sprite_data:
             for pixel_index in range(8):
                 x = x_start + pixel_index
-                
+
                 if x >= self.screen.width:
                     x = x_start
-                    break         
-                
+                    break
+
                 pixel = sprite_row >> pixel_index & 0x1
                 current_pixel = self.screen.get_pixel(x, y)
                 new_pixel = current_pixel ^ pixel
                 self.registers["V"][0xF] |= current_pixel & pixel & 0x1
                 self.screen.set_pixel(x, y, new_pixel)
-            
-            y += 1 
 
-
-if __name__ == "__main__":
-    cpu = CPU()
-    cpu.run()
+            y += 1
