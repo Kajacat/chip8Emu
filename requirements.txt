@@ -1,3 +1,4 @@
 setuptools
 pysdl2
 pysdl2-dll
+numpy
