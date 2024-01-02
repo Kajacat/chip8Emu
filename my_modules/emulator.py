@@ -8,12 +8,12 @@ import sys
 
 def run(rom_path):
     # 1. load ROM into memory
-#    rom = []
-#    with open(rom_path, "rb") as f:
-#        byte = f.read(1)
-#        while byte:
-#            rom.append(format(ord(byte), "02x"))
-#            byte = f.read(1)
+    rom = []
+    with open(rom_path, "rb") as f:
+        byte = f.read(1)
+        while byte:
+            rom.append(int.from_bytes(byte, byteorder="big"))
+            byte = f.read(1)
 
     # 2. initialize components
     screen = Screen(width=64, height=32, scale=10)
@@ -24,17 +24,15 @@ def run(rom_path):
                                    screen.height*screen.scale))
     window_surface = window.get_surface()
 
-#   cpu = CPU(screen, rom)
+    cpu = CPU(screen, rom)
     gpu = GPU(screen, window_surface)
 
     window.show()
 
-    test_screen(screen)
-
     # 3. run emulator
     running = True
     while running:
-#       cpu.run()
+        cpu.run()
         gpu.draw()
         window.refresh()
 
@@ -53,10 +51,5 @@ def run(rom_path):
     sdl2.ext.quit()
 
 
-def test_screen(screen):
-    screen.pixels = [True]*screen.width*screen.height
-
-
 if __name__ == "__main__":
-#    run(sys.argv[1])
-    run("roms/pong.ch8")
+    run(sys.argv[1])

@@ -21,8 +21,7 @@ class GPU:
                 y_pixel = y // self.screen.scale
 
                 color = (WHITE
-                         if self.screen.pixels[(y_pixel*self.screen.width
-                                                + x_pixel)]
+                         if self.screen.get_pixel(x_pixel, y_pixel)
                          else BLACK)
 
                 pixels[x][y] = color

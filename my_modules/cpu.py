@@ -9,7 +9,7 @@ OpcodeParts = namedtuple("OpcodeParts", ["F", "X", "Y", "N", "NN", "NNN"])
 class CPU:
     def __init__(self, screen, rom):
         self.pc = 512  # Program Counter (start value in decimal)
-        self.memory = [0] * 4096  # Memory with 4096 (bytes) locations
+        self.memory = [0x0] * 4096  # Memory with 4096 (bytes) locations
         self.stack = []  # Stack, 12 bits addresses
         self.registers = {
             "I": 0,  # Index register
@@ -25,13 +25,13 @@ class CPU:
 
     def fetch(self):
         opcode = (
-            self.memory[self.pc] << 8 | self.memory[self.pc + 1]
+            (self.memory[self.pc] << 8) | self.memory[self.pc + 1]
         )  # Instruction is 2 bytes long
         self.pc += 2
 
-        F = opcode & 0xF000 >> 12
-        X = opcode & 0x0F00 >> 8
-        Y = opcode & 0x00F0 >> 4
+        F = (opcode & 0xF000) >> 12
+        X = (opcode & 0x0F00) >> 8
+        Y = (opcode & 0x00F0) >> 4
         N = opcode & 0x000F
         NN = opcode & 0x00FF
         NNN = opcode & 0x0FFF
@@ -88,7 +88,6 @@ class CPU:
     def draw(self, opcode):
         # Draw a sprite at position VX, VY with N bytes of sprite data
         # starting at the address stored in I
-
         sprite_data = self.memory[self.registers["I"]:
                                   self.registers["I"] + opcode.N]
         x_start = self.registers["V"][opcode.X] & (self.screen.width - 1)
@@ -100,16 +99,14 @@ class CPU:
 
         for sprite_row in sprite_data:
             for pixel_index in range(8):
-                x = x_start + pixel_index
+                x = x_start + (7 - pixel_index)
 
                 if x >= self.screen.width:
-                    x = x_start
-                    break
+                    continue
 
                 pixel = sprite_row >> pixel_index & 0x1
                 current_pixel = self.screen.get_pixel(x, y)
                 new_pixel = current_pixel ^ pixel
                 self.registers["V"][0xF] |= current_pixel & pixel & 0x1
                 self.screen.set_pixel(x, y, new_pixel)
-
             y += 1
