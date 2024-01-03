@@ -97,6 +97,10 @@ class CPU:
         x = x_start
         y = y_start
 
+        self.screen.sprite_column_size = opcode.N
+        self.screen.sprite_row_start = x_start
+        self.screen.sprite_column_start = y_start
+
         for sprite_row in sprite_data:
             for pixel_index in range(8):
                 x = x_start + (7 - pixel_index)
