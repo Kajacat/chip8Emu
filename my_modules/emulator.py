@@ -3,6 +3,7 @@ import sdl2.ext
 from cpu import CPU
 from gpu import GPU
 from screen import Screen
+from keyboard import Keyboard
 import sys
 
 
@@ -17,6 +18,7 @@ def run(rom_path):
 
     # 2. initialize components
     screen = Screen(width=64, height=32, scale=10)
+    keyboard = Keyboard()
 
     sdl2.ext.init()
     window = sdl2.ext.Window("Chip 8 emulator",
@@ -24,7 +26,7 @@ def run(rom_path):
                                    screen.height*screen.scale))
     window_surface = window.get_surface()
 
-    cpu = CPU(screen, rom)
+    cpu = CPU(screen, rom, keyboard)
     gpu = GPU(screen, window_surface)
 
     window.show()
@@ -32,6 +34,7 @@ def run(rom_path):
     # 3. run emulator
     running = True
     while running:
+        events = sdl2.ext.get_events()
         cpu.run()
         gpu.draw()
         window.refresh()
@@ -42,9 +45,16 @@ def run(rom_path):
             if event.type == sdl2.SDL_QUIT:
                 running = False
                 break
+            if event.type == sdl2.SDL_KEYDOWN:
+                mapped_key = keyboard.map_sdl_key(event.key.keysym.sym)
+                if mapped_key is not None:
+                    keyboard.set_pressed(mapped_key)
+            elif event.type == sdl2.SDL_KEYUP:
+                mapped_key = keyboard.map_sdl_key(event.key.keysym.sym)
+                if mapped_key is not None:
+                    keyboard.set_released(mapped_key)
 
         # emulate sound
-        # emulate other software components (e.g. gamepads, network etc.)
         # time synchronization
 
     # 4. clean up
