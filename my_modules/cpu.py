@@ -139,7 +139,16 @@ class CPU:
 
         if (opcode.F == 0xF and opcode.NN == 0x29):
             return partial(self.set_register_I_to_font, opcode)
+        
+        if (opcode.F == 0xF and opcode.NN == 0x33):
+            return partial(self.bcd_conversion, opcode)
 
+        if (opcode.F == 0xF and opcode.NN == 0x55):
+            return partial(self.store_registers, opcode)
+        
+        if (opcode.F == 0xF and opcode.NN == 0x65):
+            return partial(self.load_registers, opcode)
+        
         raise NotImplementedError("Opcode not implemented")
 
     def run(self):
@@ -296,5 +305,21 @@ class CPU:
             self.pc -= 2
 
     def set_register_I_to_font(self, opcode):
-        self.registers["I"] = ((self.registers["V"][opcode.X] & 0x0F) * 5
+        font_length = 5
+        self.registers["I"] = ((self.registers["V"][opcode.X] & 0x0F) * font_length
                                + self.font_start)
+
+    def bcd_conversion(self, opcode):
+        self.memory[self.registers["I"]] = self.registers["V"][opcode.X] // 100
+        self.memory[self.registers["I"] + 1] = (self.registers["V"][opcode.X] // 10) % 10
+        self.memory[self.registers["I"] + 2] = self.registers["V"][opcode.X] % 10
+    
+    def store_registers(self, opcode):
+        # possibly increment I for older games
+        for i in range(opcode.X + 1):
+            self.memory[self.registers["I"] + i] = self.registers["V"][i]
+    
+    def load_registers(self, opcode):
+        # possibly increment I for older games
+        for i in range(opcode.X + 1):
+            self.registers["V"][i] = self.memory[self.registers["I"] + i]

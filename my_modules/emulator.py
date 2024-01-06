@@ -4,7 +4,10 @@ from cpu import CPU
 from gpu import GPU
 from screen import Screen
 from keyboard import Keyboard
+from sound import Sound
+from timeSync import Timer
 import sys
+import time
 
 
 def run(rom_path):
@@ -19,8 +22,10 @@ def run(rom_path):
     # 2. initialize components
     screen = Screen(width=64, height=32, scale=10)
     keyboard = Keyboard()
+    # sound = Sound()
+    timer = Timer()
 
-    sdl2.ext.init()
+    sdl2.ext.init(video=True, audio=False)
     window = sdl2.ext.Window("Chip 8 emulator",
                              size=(screen.width*screen.scale,
                                    screen.height*screen.scale))
@@ -34,9 +39,12 @@ def run(rom_path):
     # 3. run emulator
     running = True
     while running:
+        timer.start()
         events = sdl2.ext.get_events()
         cpu.run()
         gpu.draw()
+        # sound.play_sound()
+        # print(sdl2.SDL_GetError())
         window.refresh()
 
         # generate interrupts
@@ -56,8 +64,11 @@ def run(rom_path):
 
         # emulate sound
         # time synchronization
+        timer.wait()
 
     # 4. clean up
+    # sound.stop_sound()
+    # sound.cleanup()
     sdl2.ext.quit()
 
 
